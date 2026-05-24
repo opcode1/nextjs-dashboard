@@ -1,0 +1,26 @@
+# Explicitly decline sharp's native build (see note at bottom). Setting it to
+# false — rather than leaving it undecided — stops pnpm from raising
+# ERR_PNPM_IGNORED_BUILDS, which otherwise fails the pre-run check on `pnpm dev`.
+allowBuilds:
+  sharp: false
+
+# pnpm 11 reads pnpm-specific settings from here, NOT from .npmrc/package.json.
+# This project lives on a mapped network drive (\\Ds1\share1) that can't create
+# the symlinks/hardlinks pnpm normally uses, so:
+
+# Flat, npm-style node_modules with no symlinks (safe on the network share).
+nodeLinker: hoisted
+
+# Don't run a full (network) `pnpm install` before every `pnpm dev`/`pnpm start`.
+# The share has flaky registry access and bins are launched via node directly, so
+# the pre-run check just adds latency and failure surface.
+verifyDepsBeforeRun: false
+
+# Keep the store on a local NTFS drive so pnpm can create its required
+# project-registration symlink. (Cross-drive => packages are copied, not hardlinked.)
+storeDir: C:/Users/x/AppData/Local/pnpm/store
+
+# No native build scripts are run. This project is on a UNC-backed mapped drive
+# (\\Ds1\share1) where cmd.exe can't use the package dir as a working directory,
+# so node-pre-gyp/native compiles fail. bcrypt was replaced with pure-JS bcryptjs,
+# and sharp loads its prebuilt binary from @img/sharp-win32-x64 (no build needed).
